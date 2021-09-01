@@ -1,0 +1,21 @@
+{   
+    "epochs" : 50,
+    "fepochs" : 100,
+    "exp_name" : "Resnet18_CIFAR10_Pretrain",
+    "seed": 42, 
+    "split":0.4,
+    "train_path": "/work/netthinker/shared/cifar-100/train",
+    "test_path" : "/work/netthinker/shared/cifar-100/test",
+    "model_name" : "Resnet50",
+    "finetune" : 0,
+    "num_classes" : 10,
+    "dataset" : "CIFAR-10",
+    "pretrain_weights" : "./Resnet18_CIFAR10_Pretrain",
+    "lr" : 0.1,
+    "momentum" : 0.9,
+    "weight_decay" : 1e-4,
+    "batch_size" : 128,
+    "save_path": "./pretraining_models/",
+    "target_val_acc" : 100.0,
+    "save_directory" : "./pretraining_arrays/"
+}
