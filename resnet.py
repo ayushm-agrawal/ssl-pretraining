@@ -78,8 +78,10 @@ class Block(nn.Module):
 
 
 class ResNet(nn.Module):
-    def __init__(self, ResBlock, layer_list, num_classes, num_channels=3):
+    def __init__(self, ResBlock, layer_list, num_classes, num_channels=3, config=None):
         super(ResNet, self).__init__()
+
+        self.config = config
         self.in_channels = 64
 
         self.conv1 = nn.Conv2d(
@@ -99,17 +101,33 @@ class ResNet(nn.Module):
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.fc = nn.Linear(512*ResBlock.expansion, num_classes)
 
-    def get_grid_col(self, grid_tensor):
-        arr = grid_tensor.detach().cpu().numpy()
-
     def forward(self, y):
+        if self.config.initialization == 1:
 
-        new_x = torch.transpose(y, 0, 1)
-        # print(f"Here: {new_x.shape}")
-        outputs = []
-        for x in new_x:
-            # print(x.shape)
-            x = self.relu(self.batch_norm1(self.conv1(x)))
+            new_x = torch.transpose(y, 0, 1)
+            # print(f"Here: {new_x.shape}")
+            outputs = []
+            for x in new_x:
+                # print(x.shape)
+                x = self.relu(self.batch_norm1(self.conv1(x)))
+                x = self.max_pool(x)
+
+                x = self.layer1(x)
+                x = self.layer2(x)
+                x = self.layer3(x)
+                x = self.layer4(x)
+
+                x = self.avgpool(x)
+                x = x.reshape(x.shape[0], -1)
+                x = self.fc(x)
+                outputs.append(x)
+
+            outputs = torch.stack(outputs)
+            outputs = torch.transpose(outputs, 0, 1)
+
+            return outputs
+        else:
+            x = self.relu(self.batch_norm1(self.conv1(y)))
             x = self.max_pool(x)
 
             x = self.layer1(x)
@@ -120,17 +138,8 @@ class ResNet(nn.Module):
             x = self.avgpool(x)
             x = x.reshape(x.shape[0], -1)
             x = self.fc(x)
-            # (8,4)
-            # print(x.shape, type(x))
-            outputs.append(x)
 
-        # (4,8,4)
-        # 8,4,4
-        outputs = torch.stack(outputs)
-        outputs = torch.transpose(outputs, 0, 1)
-
-        # print(f"Outputs: {outputs.shape}, {type(outputs)}")
-        return outputs
+            return x
 
     def _make_layer(self, ResBlock, blocks, planes, stride=1):
         ii_downsample = None
@@ -153,13 +162,13 @@ class ResNet(nn.Module):
         return nn.Sequential(*layers)
 
 
-def ResNet50(num_classes, channels=3):
+def ResNet50(num_classes, channels=3, config=None):
     return ResNet(Bottleneck, [3, 4, 6, 3], num_classes, channels)
 
 
-def ResNet101(num_classes, channels=3):
+def ResNet101(num_classes, channels=3, config=None):
     return ResNet(Bottleneck, [3, 4, 23, 3], num_classes, channels)
 
 
-def ResNet152(num_classes, channels=3):
+def ResNet152(num_classes, channels=3, config=None):
     return ResNet(Bottleneck, [3, 8, 36, 3], num_classes, channels)

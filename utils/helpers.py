@@ -55,7 +55,7 @@ def cast_type(s):
 def load_model(configs, classes):
     """ Function loads the model based on hyperparameters"""
 
-    if configs.initialization:
+    if configs.initialization == 1:
         print("Loading arch for initialization: {}, Type: {}.".format(
             configs.arch, type(configs.arch)))
         print("Loading weights for arch from: {}".format(
@@ -81,7 +81,7 @@ def load_model(configs, classes):
         # load model
         model, _ = load_models(configs.arch)
         # update final layer
-        model.fc = nn.Linear(model.fc.in_features, classes)
+        # model.fc = nn.Linear(model.fc.in_features, classes)
 
         return model, configs.model_out_name
 
@@ -110,4 +110,4 @@ def load_models(arch):
     elif arch == "wide_resnet50_2":
         return models.wide_resnet50_2(), 2048
     elif arch == "resnet50_scratch":
-        return ResNet50(num_classes=4), 512
+        return ResNet50(num_classes=4, config=configs), 512

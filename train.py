@@ -53,7 +53,7 @@ def training(configs):
                 # accumulate total number of examples
                 train_total += data.size(0)
 
-                accuracy = curr_correct/data.size(0)
+                accuracy = train_correct/train_total
 
                 tepoch.set_postfix(loss=loss.item(), accuracy=100. * accuracy)
                 sleep(0.1)
@@ -63,47 +63,59 @@ def training(configs):
                 train_loss/len(configs.data_loader['train'].dataset), 4)
             train_acc = round(((train_correct/train_total) * 100.0), 4)
 
-            configs.model.eval()
-            # with torch.no_grad():
-            #     for data, labels in configs.data_loader['test']:
+            if(configs.initialization == 1):
+                configs.model.eval()
+                with torch.no_grad():
+                    for data, labels in configs.data_loader['test']:
 
-            #         data, labels = data.cuda(), labels.cuda()
+                        data, labels = data.cuda(), labels.cuda()
 
-            #         output = configs.model(data)
-            #         loss = configs.criterion(output, labels)
+                        output = configs.model(data)
+                        loss = configs.criterion(output, labels)
 
-            #         test_loss += loss.item()*data.size(0)
+                        test_loss += loss.item()*data.size(0)
 
-            #         # get the predictions for each image in the batch
-            #         preds = torch.max(output, 1)[1]
-            #         # get the number of correct predictions in the batch
-            #         test_correct += np.sum(np.squeeze(
-            #             preds.eq(labels.data.view_as(preds))).cpu().numpy())
+                        # get the predictions for each image in the batch
+                        preds = torch.max(output, 1)[1]
+                        # get the number of correct predictions in the batch
+                        test_correct += np.sum(np.squeeze(
+                            preds.eq(labels.data.view_as(preds))).cpu().numpy())
 
-            #         # accumulate total number of examples
-            #         test_total += data.size(0)
+                        # accumulate total number of examples
+                        test_total += data.size(0)
 
-            # # save model
-            # if test_loss < min_test_loss:
-            #     print(f"Saving model at Epoch: {epoch}")
-            torch.save(configs.model.module.state_dict(),
-                       configs.save_path+configs.exp_name)
+                # save model
+                if test_loss < min_test_loss:
+                    print(f"Saving model at Epoch: {epoch}")
+
+            if(configs.arch == 'resnet50_scratch'):
+                torch.save(configs.model.state_dict(),
+                           configs.save_path+configs.exp_name)
+            else:
+
+                torch.save(configs.model.module.state_dict(),
+                           configs.save_path+configs.exp_name)
 
             # compute test loss and accuracy
-            # test_loss = round(test_loss/len(configs.data_loader['test'].dataset), 4)
-            # test_acc = round(((test_correct/test_total) * 100), 4)
+            if(configs.initialization == 1):
+                test_loss = round(
+                    test_loss/len(configs.data_loader['test'].dataset), 4)
+                test_acc = round(((test_correct/test_total) * 100), 4)
+                test_acc_arr.append(test_acc)
+                test_loss_arr.append(test_loss)
 
             # update tracking arrays
             train_acc_arr.append(train_acc)
-            # test_acc_arr.append(test_acc)
             train_loss_arr.append(train_loss)
-            # test_loss_arr.append(test_loss)
 
-            # print(
-            #     f"Epoch: {epoch} \tTrain Loss: {train_loss} \tTrain Acc: {train_acc}% \tTest Loss: {test_loss} \tTest Acc: {test_acc}%")
-            # if float(test_acc) >= configs.target_val_acc:
-            #     break
-            print(
-                f"Epoch: {epoch} \tTrain Loss: {train_loss} \tTrain Acc: {train_acc}% ")
+            if(configs.initialization == 1):
+                print(
+                    f"Epoch: {epoch} \tTrain Loss: {train_loss} \tTrain Acc: {train_acc}% \tTest Loss: {test_loss} \tTest Acc: {test_acc}%")
+                if float(test_acc) >= configs.target_val_acc:
+                    break
 
-    return np.asarray(train_acc_arr), np.asarray(train_loss_arr)
+            else:
+                print(
+                    f"Epoch: {epoch} \tTrain Loss: {train_loss} \tTrain Acc: {train_acc}% ")
+
+        return np.asarray(train_acc_arr), np.asarray(train_loss_arr)

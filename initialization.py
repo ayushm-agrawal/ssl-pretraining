@@ -121,7 +121,7 @@ def transfer_and_retrain(configs, classes=0):
     # reset number of epochs.
     configs.num_epochs = configs.t_num_epochs
     # reset the target validation accuracy
-    configs.target_val_accuracy = 100.0
+    configs.target_val_accuracy = 95.0
     # load transfer model.
     transfer_model, transfer_model_name = load_model(configs, classes)
     # update num_classes to transfer classes
@@ -162,7 +162,7 @@ def transfer_and_retrain(configs, classes=0):
     print(f"Transfer model will be saved at {save_path}")
 
     # train the transfer/retrain model.
-    model = train(configs, save_path, transfer=True)
+    model = training(configs)
 
     return model
 
