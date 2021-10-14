@@ -1,4 +1,4 @@
-import argparse
+
 import random
 
 import numpy as np
@@ -34,10 +34,10 @@ def initialization(configs):
     configs.num_epochs = configs.p_num_epochs
 
     # run pretraining.
-    pretraining(configs, classes=len(p_classes))
+    pretraining(configs, classes=4)
 
     # update num_classes for pretraining
-    configs.num_classes = len(p_classes)
+    configs.num_classes = 4
 
     print("Pre-Training complete.")
     print("Initializing the weights for transfer/retraining now!")
@@ -72,8 +72,8 @@ def pretraining(configs, classes=0):
             pretraining_model = nn.DataParallel(pretraining_model)
             print("\nPretraining model moved to Data Parallel")
         pretraining_model.cuda()
-    else:
-        raise ValueError("Train on GPU is recommended!")
+    # else:
+        # raise ValueError("Train on GPU is recommended!")
 
     # create the optimizer.
     if(configs.adam == 1):

@@ -1,5 +1,8 @@
+from time import sleep
+
 import numpy as np
 import torch
+from tqdm import tqdm
 
 
 def training(configs):
@@ -13,7 +16,7 @@ def training(configs):
     train_acc_arr, test_acc_arr = [], []
     train_loss_arr, test_loss_arr = [], []
 
-    for epoch in range(1, configs.epochs+1):
+    for epoch in range(1, configs.num_epochs+1):
 
         # tracking variables
         train_loss, train_correct, train_total = 0.0, 0.0, 0.0
@@ -21,76 +24,86 @@ def training(configs):
 
         # train the model
         configs.model.train()
+        train_loader = configs.data_loader['train']
+        with tqdm(train_loader, unit="batch") as tepoch:
+            for data, labels in tepoch:
+                tepoch.set_description(f"Epoch {epoch}")
+                # move the data and labels to gpu
+                if configs.gpu_avail:
+                    data, labels = data.cuda(), labels.cuda()
 
-        for data, labels in configs.loaders['train']:
-            # move the data and labels to gpu
-            data, labels = data.cuda(), labels.cuda()
+                configs.optimizer.zero_grad()
+                # get model outputs
+                output = configs.model(data)
+                # calculate the loss
+                loss = configs.criterion(output, labels)
+                # backprop
+                loss.backward()
+                # optimize the weights
+                configs.optimizer.step()
+                # update the training loss for the batch
+                train_loss += loss.item()*data.size(0)
+                # get the predictions for each image in the batch
+                preds = torch.max(output, 1)[1]
+                # get the number of correct predictions in the batch
+                curr_correct = np.sum(np.squeeze(
+                    preds.eq(labels.data.view_as(preds))).cpu().numpy())
+                train_correct += curr_correct
 
-            configs.optimizer.zero_grad()
-            # get model outputs
-            output = configs.model(data)
-            # calculate the loss
-            loss = configs.criterion(output, labels)
-            # backprop
-            loss.backward()
-            # optimize the weights
-            configs.optimizer.step()
-            # update the training loss for the batch
-            train_loss += loss.item()*data.size(0)
-            # get the predictions for each image in the batch
-            preds = torch.max(output, 1)[1]
-            # get the number of correct predictions in the batch
-            train_correct += np.sum(np.squeeze(
-                preds.eq(labels.data.view_as(preds))).cpu().numpy())
+                # accumulate total number of examples
+                train_total += data.size(0)
 
-            # accumulate total number of examples
-            train_total += data.size(0)
+                accuracy = curr_correct/data.size(0)
 
-        # compute train loss and accuracy
-        train_loss = round(train_loss/len(configs.loaders['train'].dataset), 4)
-        train_acc = round(((train_correct/train_total) * 100.0), 4)
+                tepoch.set_postfix(loss=loss.item(), accuracy=100. * accuracy)
+                sleep(0.1)
 
-        configs.model.eval()
-        # with torch.no_grad():
-        #     for data, labels in configs.loaders['test']:
+            # compute train loss and accuracy
+            train_loss = round(
+                train_loss/len(configs.data_loader['train'].dataset), 4)
+            train_acc = round(((train_correct/train_total) * 100.0), 4)
 
-        #         data, labels = data.cuda(), labels.cuda()
+            configs.model.eval()
+            # with torch.no_grad():
+            #     for data, labels in configs.data_loader['test']:
 
-        #         output = configs.model(data)
-        #         loss = configs.criterion(output, labels)
+            #         data, labels = data.cuda(), labels.cuda()
 
-        #         test_loss += loss.item()*data.size(0)
+            #         output = configs.model(data)
+            #         loss = configs.criterion(output, labels)
 
-        #         # get the predictions for each image in the batch
-        #         preds = torch.max(output, 1)[1]
-        #         # get the number of correct predictions in the batch
-        #         test_correct += np.sum(np.squeeze(
-        #             preds.eq(labels.data.view_as(preds))).cpu().numpy())
+            #         test_loss += loss.item()*data.size(0)
 
-        #         # accumulate total number of examples
-        #         test_total += data.size(0)
+            #         # get the predictions for each image in the batch
+            #         preds = torch.max(output, 1)[1]
+            #         # get the number of correct predictions in the batch
+            #         test_correct += np.sum(np.squeeze(
+            #             preds.eq(labels.data.view_as(preds))).cpu().numpy())
 
-        # # save model
-        # if test_loss < min_test_loss:
-        #     print(f"Saving model at Epoch: {epoch}")
-        torch.save(configs.model.module.state_dict(),
-                   configs.save_path+configs.exp_name)
+            #         # accumulate total number of examples
+            #         test_total += data.size(0)
 
-        # compute test loss and accuracy
-        # test_loss = round(test_loss/len(configs.loaders['test'].dataset), 4)
-        # test_acc = round(((test_correct/test_total) * 100), 4)
+            # # save model
+            # if test_loss < min_test_loss:
+            #     print(f"Saving model at Epoch: {epoch}")
+            torch.save(configs.model.module.state_dict(),
+                       configs.save_path+configs.exp_name)
 
-        # update tracking arrays
-        train_acc_arr.append(train_acc)
-        # test_acc_arr.append(test_acc)
-        train_loss_arr.append(train_loss)
-        # test_loss_arr.append(test_loss)
+            # compute test loss and accuracy
+            # test_loss = round(test_loss/len(configs.data_loader['test'].dataset), 4)
+            # test_acc = round(((test_correct/test_total) * 100), 4)
 
-        # print(
-        #     f"Epoch: {epoch} \tTrain Loss: {train_loss} \tTrain Acc: {train_acc}% \tTest Loss: {test_loss} \tTest Acc: {test_acc}%")
-        # if float(test_acc) >= configs.target_val_acc:
-        #     break
-        print(
-            f"Epoch: {epoch} \tTrain Loss: {train_loss} \tTrain Acc: {train_acc}% ")
+            # update tracking arrays
+            train_acc_arr.append(train_acc)
+            # test_acc_arr.append(test_acc)
+            train_loss_arr.append(train_loss)
+            # test_loss_arr.append(test_loss)
+
+            # print(
+            #     f"Epoch: {epoch} \tTrain Loss: {train_loss} \tTrain Acc: {train_acc}% \tTest Loss: {test_loss} \tTest Acc: {test_acc}%")
+            # if float(test_acc) >= configs.target_val_acc:
+            #     break
+            print(
+                f"Epoch: {epoch} \tTrain Loss: {train_loss} \tTrain Acc: {train_acc}% ")
 
     return np.asarray(train_acc_arr), np.asarray(train_loss_arr)

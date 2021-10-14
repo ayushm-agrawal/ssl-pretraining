@@ -1,9 +1,13 @@
 import os
 import os.path
+import random
 
 import numpy as np
 import torch
+import torchnet as tnt
+from matplotlib import cm
 from PIL import Image
+from torch.utils.data.dataloader import default_collate
 from torchvision.datasets.vision import VisionDataset
 
 #### These were in the original Pytorch Docs and were not changed ####
@@ -61,7 +65,7 @@ def default_loader(path):
 
 
 def make_dataset(directory, classes, class_to_idx,
-                 extensions=None, is_valid_file=None, subset_split=36000, class_split=12, dist="uniform"):
+                 extensions=None, is_valid_file=None, subset_split=36000, class_split=12, dist="normal"):
     """
     This function creates custom pretraining and transfer datsets.
     params:
@@ -174,7 +178,6 @@ def make_dataset(directory, classes, class_to_idx,
             else:
                 transfer_data.append((img, label))
                 t_classes.append(label)
-        print(pretrain_counts)
 
     else:
         # sort based on counts for each class
@@ -279,7 +282,7 @@ class DatasetFolder(VisionDataset):
     """
 
     def __init__(self, root, loader, extensions=None, transform=None,
-                 target_transform=None, is_valid_file=None,  subset_split=36000, class_split=12, dist="uniform"):
+                 target_transform=None, is_valid_file=None,  subset_split=36000, class_split=12, dist="normal"):
         super(DatasetFolder, self).__init__(root, transform=transform,
                                             target_transform=target_transform)
 
@@ -362,7 +365,7 @@ class TransferImageFolder(DatasetFolder):
     """
 
     def __init__(self, root, transform=None, target_transform=None,
-                 loader=default_loader, is_valid_file=None,  subset_split=20000, class_split=10, dist="uniform"):
+                 loader=default_loader, is_valid_file=None,  subset_split=30000, class_split=10, dist="normal"):
         # calls DatasetFolder
         super(TransferImageFolder, self).__init__(root, loader, IMG_EXTENSIONS if is_valid_file is None else None,
                                                   transform=transform,
@@ -426,7 +429,7 @@ class PretrainImageFolder(DatasetFolder):
     """
 
     def __init__(self, root, transform=None, target_transform=None,
-                 loader=default_loader, is_valid_file=None,  subset_split=20000, class_split=10, dist="uniform"):
+                 loader=default_loader, is_valid_file=None,  subset_split=20000, class_split=10, dist="normal"):
         # calls DatasetFolder
         super(PretrainImageFolder, self).__init__(root, loader, IMG_EXTENSIONS if is_valid_file is None else None,
                                                   transform=transform,
@@ -452,12 +455,12 @@ class PretrainImageFolder(DatasetFolder):
         if self.transform is not None:
             # sample = self.transform(sample)
             sample = [self.transform(sample),
-                      self.transform(rotate_img(sample,  90)),
-                      self.transform(rotate_img(sample, 180)),
-                      self.transform(rotate_img(sample, 270))]
-        if self.target_transform is not None:
-            # target = self.target_transform(target)
-            target = self.target_transform(torch.LongTensor([0, 1, 2, 3]))
+                      self.transform(sample.rotate(90, expand=True)),
+                      self.transform(sample.rotate(180, expand=True)),
+                      self.transform(sample.rotate(270, expand=True))]
+        # if self.target_transform is not None:
+        #     # target = self.target_transform(target)
+        target = torch.LongTensor([0, 1, 2, 3])
 
         return torch.stack(sample, dim=0), target
 
@@ -473,3 +476,76 @@ def rotate_img(img, rot):
         return np.transpose(np.flipud(img), (1, 0, 2)).copy()
     else:
         raise ValueError('rotation should be 0, 90, 180, or 270 degrees')
+
+
+class CustomDataLoader(object):
+    def __init__(self,
+                 dataset,
+                 transforms,
+                 batch_size=1,
+                 unsupervised=True,
+                 epoch_size=None,
+                 num_workers=0,
+
+                 shuffle=True):
+        self.dataset = dataset
+        self.shuffle = shuffle
+        self.epoch_size = epoch_size if epoch_size is not None else len(
+            dataset)
+        self.batch_size = batch_size
+        self.unsupervised = unsupervised
+        self.num_workers = num_workers
+
+        self.transform = transforms
+
+    def get_iterator(self, epoch=0):
+        rand_seed = epoch * self.epoch_size
+        random.seed(rand_seed)
+        if self.unsupervised:
+            # if in unsupervised mode define a loader function that given the
+            # index of an image it returns the 4 rotated copies of the image
+            # plus the label of the rotation, i.e., 0 for 0 degrees rotation,
+            # 1 for 90 degrees, 2 for 180 degrees, and 3 for 270 degrees.
+            def _load_function(idx):
+                idx = idx % len(self.dataset)
+                img0, _ = self.dataset[idx]
+                rotated_imgs = [
+                    self.transform(img0),
+                    self.transform(rotate_img(img0,  90)),
+                    self.transform(rotate_img(img0, 180)),
+                    self.transform(rotate_img(img0, 270))
+                ]
+                rotation_labels = torch.LongTensor([0, 1, 2, 3])
+                return torch.stack(rotated_imgs, dim=0), rotation_labels
+
+            def _collate_fun(batch):
+                batch = default_collate(batch)
+                assert(len(batch) == 2)
+                batch_size, rotations, channels, height, width = batch[0].size(
+                )
+                batch[0] = batch[0].view(
+                    [batch_size*rotations, channels, height, width])
+                batch[1] = batch[1].view([batch_size*rotations])
+                return batch
+        else:  # supervised mode
+            # if in supervised mode define a loader function that given the
+            # index of an image it returns the image and its categorical label
+            def _load_function(idx):
+                idx = idx % len(self.dataset)
+                img, categorical_label = self.dataset[idx]
+                img = self.transform(img)
+                return img, categorical_label
+            _collate_fun = default_collate
+
+        tnt_dataset = tnt.dataset.ListDataset(elem_list=range(self.epoch_size),
+                                              load=_load_function)
+        data_loader = tnt_dataset.parallel(batch_size=self.batch_size,
+                                           collate_fn=_collate_fun, num_workers=self.num_workers,
+                                           shuffle=self.shuffle)
+        return data_loader
+
+    def __call__(self, epoch=0):
+        return self.get_iterator(epoch)
+
+    def __len__(self):
+        return self.epoch_size / self.batch_size
