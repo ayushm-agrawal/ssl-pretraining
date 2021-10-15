@@ -78,10 +78,10 @@ class Block(nn.Module):
 
 
 class ResNet(nn.Module):
-    def __init__(self, ResBlock, layer_list, num_classes, num_channels=3, config=None):
+    def __init__(self, ResBlock, layer_list, num_classes, num_channels=3, transfer=False):
         super(ResNet, self).__init__()
 
-        self.config = config
+        self.transfer = transfer
         self.in_channels = 64
 
         self.conv1 = nn.Conv2d(
@@ -102,7 +102,7 @@ class ResNet(nn.Module):
         self.fc = nn.Linear(512*ResBlock.expansion, num_classes)
 
     def forward(self, y):
-        if self.config.initialization == 1:
+        if not self.transfer:
 
             new_x = torch.transpose(y, 0, 1)
             # print(f"Here: {new_x.shape}")
@@ -162,13 +162,13 @@ class ResNet(nn.Module):
         return nn.Sequential(*layers)
 
 
-def ResNet50(num_classes, channels=3, config=None):
-    return ResNet(Bottleneck, [3, 4, 6, 3], num_classes, channels)
+def ResNet50(num_classes, channels=3, transfer=False):
+    return ResNet(Bottleneck, [3, 4, 6, 3], num_classes, channels, transfer=False)
 
 
-def ResNet101(num_classes, channels=3, config=None):
-    return ResNet(Bottleneck, [3, 4, 23, 3], num_classes, channels)
+def ResNet101(num_classes, channels=3, transfer=False):
+    return ResNet(Bottleneck, [3, 4, 23, 3], num_classes, channels, transfer=False)
 
 
-def ResNet152(num_classes, channels=3, config=None):
-    return ResNet(Bottleneck, [3, 8, 36, 3], num_classes, channels)
+def ResNet152(num_classes, channels=3, transfer=False):
+    return ResNet(Bottleneck, [3, 8, 36, 3], num_classes, channels, transfer=False)

@@ -62,7 +62,7 @@ def load_model(configs, classes):
             configs.model_weights_dir))
 
         # load model
-        model, _ = load_models(configs.arch)
+        model, _ = load_models(configs.arch, transfer=True)
 
         # update fc layer with pretraining classes
         # model.fc = nn.Linear(model.fc.in_features, configs.num_classes)
@@ -86,7 +86,7 @@ def load_model(configs, classes):
         return model, configs.model_out_name
 
 
-def load_models(arch):
+def load_models(arch, transfer=False):
     """
     This function returns an architecture based on user input.
     params:
@@ -110,4 +110,4 @@ def load_models(arch):
     elif arch == "wide_resnet50_2":
         return models.wide_resnet50_2(), 2048
     elif arch == "resnet50_scratch":
-        return ResNet50(num_classes=4, config=configs), 512
+        return ResNet50(num_classes=4, transfer=transfer), 512

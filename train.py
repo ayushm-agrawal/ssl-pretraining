@@ -5,7 +5,7 @@ import torch
 from tqdm import tqdm
 
 
-def training(configs):
+def training(configs, transfer=False):
     """
     Performs training and evaluation.
     """
@@ -35,6 +35,7 @@ def training(configs):
                 configs.optimizer.zero_grad()
                 # get model outputs
                 output = configs.model(data)
+                # print(output.shape, labels.shape)
                 # calculate the loss
                 loss = configs.criterion(output, labels)
                 # backprop
@@ -48,10 +49,13 @@ def training(configs):
                 # get the number of correct predictions in the batch
                 curr_correct = np.sum(np.squeeze(
                     preds.eq(labels.data.view_as(preds))).cpu().numpy())
-                train_correct += curr_correct
 
+                train_correct += curr_correct
                 # accumulate total number of examples
-                train_total += data.size(0)
+                if(configs.initialization == 1):
+                    train_total += data.size(0)
+                else:
+                    train_total += (data.size(0)*data.size(1))
 
                 accuracy = train_correct/train_total
 

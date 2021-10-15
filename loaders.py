@@ -11,8 +11,7 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision import datasets
 from torchvision.utils import make_grid, save_image
 
-from custom_dataset import (CustomDataLoader, PretrainImageFolder,
-                            TransferImageFolder)
+from custom_dataset import PretrainImageFolder, TransferImageFolder
 
 
 def create_loaders(configs, data_path, num_workers=0):
