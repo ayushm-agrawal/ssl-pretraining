@@ -1,11 +1,15 @@
 import math
 
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torchvision.transforms as transforms
+from IPython.display import Image
+from matplotlib import cm
 from PIL import Image
 from torch.utils.data import DataLoader, Dataset
 from torchvision import datasets
+from torchvision.utils import make_grid, save_image
 
 from custom_dataset import PretrainImageFolder, TransferImageFolder
 
@@ -105,9 +109,14 @@ def initialization_loaders(configs, data_path, num_workers=0):
     )
 
     # load augmentation transforms.
-    train_transform = transforms.Compose([
-        transforms.RandomCrop(32, padding=4),
+    t_train_transform = transforms.Compose([
+        transforms.CenterCrop(32),
         transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        normalize,
+    ])
+    p_train_transform = transforms.Compose([
+        transforms.CenterCrop(32),
         transforms.ToTensor(),
         normalize,
     ])
@@ -122,9 +131,9 @@ def initialization_loaders(configs, data_path, num_workers=0):
 
     # create imagefolder objects for augmented transfer and pretraining dataset.
     transfer_dataset = TransferImageFolder(
-        root=data_path, transform=train_transform, subset_split=30000, class_split=10)
+        root=data_path, transform=t_train_transform, subset_split=30000, class_split=10)
     pretrain_dataset = PretrainImageFolder(
-        root=data_path, transform=train_transform, subset_split=20000, class_split=10)
+        root=data_path, transform=p_train_transform, subset_split=20000, class_split=10)
 
     # # create imagefolder objects for non-augmented pretraining dataset.
     # pretrain_dataset_2 = PretrainImageFolder(
@@ -157,9 +166,6 @@ def initialization_loaders(configs, data_path, num_workers=0):
     # dataloaders for pretraining.
     p_train_loader = torch.utils.data.DataLoader(p_train_dataset, batch_size=configs.p_batch_size,
                                                  num_workers=num_workers, shuffle=True)
-
-    # p_val_loader = torch.utils.data.DataLoader(p_val_dataset, batch_size=configs.p_batch_size,
-    #                                            num_workers=num_workers, shuffle=True)
 
     # Create loaders dictionary for transfer learning and pretraining.
     t_loaders_dict = {"train": t_train_loader, "valid": t_val_loader}

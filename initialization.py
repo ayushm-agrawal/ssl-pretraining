@@ -1,4 +1,4 @@
-import argparse
+
 import random
 
 import numpy as np
@@ -34,10 +34,10 @@ def initialization(configs):
     configs.num_epochs = configs.p_num_epochs
 
     # run pretraining.
-    pretraining(configs, classes=len(p_classes))
+    pretraining(configs, classes=4)
 
     # update num_classes for pretraining
-    configs.num_classes = len(p_classes)
+    configs.num_classes = 4
 
     print("Pre-Training complete.")
     print("Initializing the weights for transfer/retraining now!")
@@ -72,8 +72,8 @@ def pretraining(configs, classes=0):
             pretraining_model = nn.DataParallel(pretraining_model)
             print("\nPretraining model moved to Data Parallel")
         pretraining_model.cuda()
-    else:
-        raise ValueError("Train on GPU is recommended!")
+    # else:
+        # raise ValueError("Train on GPU is recommended!")
 
     # create the optimizer.
     if(configs.adam == 1):
@@ -121,7 +121,7 @@ def transfer_and_retrain(configs, classes=0):
     # reset number of epochs.
     configs.num_epochs = configs.t_num_epochs
     # reset the target validation accuracy
-    configs.target_val_accuracy = 100.0
+    configs.target_val_accuracy = 95.0
     # load transfer model.
     transfer_model, transfer_model_name = load_model(configs, classes)
     # update num_classes to transfer classes
@@ -162,7 +162,7 @@ def transfer_and_retrain(configs, classes=0):
     print(f"Transfer model will be saved at {save_path}")
 
     # train the transfer/retrain model.
-    model = train(configs, save_path, transfer=True)
+    model = training(configs, transfer=True)
 
     return model
 

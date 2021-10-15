@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -77,8 +78,10 @@ class Block(nn.Module):
 
 
 class ResNet(nn.Module):
-    def __init__(self, ResBlock, layer_list, num_classes, num_channels=3):
+    def __init__(self, ResBlock, layer_list, num_classes, num_channels=3, transfer=False):
         super(ResNet, self).__init__()
+
+        self.transfer = transfer
         self.in_channels = 64
 
         self.conv1 = nn.Conv2d(
@@ -98,20 +101,45 @@ class ResNet(nn.Module):
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.fc = nn.Linear(512*ResBlock.expansion, num_classes)
 
-    def forward(self, x):
-        x = self.relu(self.batch_norm1(self.conv1(x)))
-        x = self.max_pool(x)
+    def forward(self, y):
+        if not self.transfer:
 
-        x = self.layer1(x)
-        x = self.layer2(x)
-        x = self.layer3(x)
-        x = self.layer4(x)
+            new_x = torch.transpose(y, 0, 1)
+            # print(f"Here: {new_x.shape}")
+            outputs = []
+            for x in new_x:
+                # print(x.shape)
+                x = self.relu(self.batch_norm1(self.conv1(x)))
+                x = self.max_pool(x)
 
-        x = self.avgpool(x)
-        x = x.reshape(x.shape[0], -1)
-        x = self.fc(x)
+                x = self.layer1(x)
+                x = self.layer2(x)
+                x = self.layer3(x)
+                x = self.layer4(x)
 
-        return x
+                x = self.avgpool(x)
+                x = x.reshape(x.shape[0], -1)
+                x = self.fc(x)
+                outputs.append(x)
+
+            outputs = torch.stack(outputs)
+            outputs = torch.transpose(outputs, 0, 1)
+
+            return outputs
+        else:
+            x = self.relu(self.batch_norm1(self.conv1(y)))
+            x = self.max_pool(x)
+
+            x = self.layer1(x)
+            x = self.layer2(x)
+            x = self.layer3(x)
+            x = self.layer4(x)
+
+            x = self.avgpool(x)
+            x = x.reshape(x.shape[0], -1)
+            x = self.fc(x)
+
+            return x
 
     def _make_layer(self, ResBlock, blocks, planes, stride=1):
         ii_downsample = None
@@ -134,13 +162,13 @@ class ResNet(nn.Module):
         return nn.Sequential(*layers)
 
 
-def ResNet50(num_classes, channels=3):
-    return ResNet(Bottleneck, [3, 4, 6, 3], num_classes, channels)
+def ResNet50(num_classes, channels=3, transfer=False):
+    return ResNet(Bottleneck, [3, 4, 6, 3], num_classes, channels, transfer=False)
 
 
-def ResNet101(num_classes, channels=3):
-    return ResNet(Bottleneck, [3, 4, 23, 3], num_classes, channels)
+def ResNet101(num_classes, channels=3, transfer=False):
+    return ResNet(Bottleneck, [3, 4, 23, 3], num_classes, channels, transfer=False)
 
 
-def ResNet152(num_classes, channels=3):
-    return ResNet(Bottleneck, [3, 8, 36, 3], num_classes, channels)
+def ResNet152(num_classes, channels=3, transfer=False):
+    return ResNet(Bottleneck, [3, 8, 36, 3], num_classes, channels, transfer=False)

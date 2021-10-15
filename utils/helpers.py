@@ -3,6 +3,7 @@ import os
 import torch
 import torch.nn as nn
 import torchvision.models as models
+from resnet import ResNet50
 
 
 def config_dict(location):
@@ -13,11 +14,13 @@ def config_dict(location):
     __location__ = os.path.realpath(os.path.join(
         os.getcwd(), os.path.dirname(__file__)))
 
-    file = open(os.path.join(__location__, location))
+    # file = open(os.path.join(__location__, location))
+    file = open(location)
     parameters = file.readlines()
 
     params = {}
     for parameter in parameters:
+        # print(parameter)
         # remove whitespace
         parameter = parameter.replace(" ", "")
         parameter = parameter.replace("\n", "")
@@ -52,24 +55,24 @@ def cast_type(s):
 def load_model(configs, classes):
     """ Function loads the model based on hyperparameters"""
 
-    if configs.initialization:
+    if configs.initialization == 1:
         print("Loading arch for initialization: {}, Type: {}.".format(
             configs.arch, type(configs.arch)))
         print("Loading weights for arch from: {}".format(
             configs.model_weights_dir))
 
         # load model
-        model, _ = load_models(configs.arch)
+        model, _ = load_models(configs.arch, transfer=True)
 
         # update fc layer with pretraining classes
-        model.fc = nn.Linear(model.fc.in_features, configs.num_classes)
+        # model.fc = nn.Linear(model.fc.in_features, configs.num_classes)
 
-        # load weights from pretraining
-        model.load_state_dict(torch.load(
-            configs.model_weights_dir + configs.model_in_name))
+        # # load weights from pretraining
+        # model.load_state_dict(torch.load(
+        #     configs.model_weights_dir + configs.model_in_name))
 
-        # update the fc layer for transfer
-        model.fc = nn.Linear(model.fc.in_features, classes)
+        # # update the fc layer for transfer
+        # model.fc = nn.Linear(model.fc.in_features, classes)
 
         return model, configs.model_out_name
     else:
@@ -78,12 +81,12 @@ def load_model(configs, classes):
         # load model
         model, _ = load_models(configs.arch)
         # update final layer
-        model.fc = nn.Linear(model.fc.in_features, classes)
+        # model.fc = nn.Linear(model.fc.in_features, classes)
 
         return model, configs.model_out_name
 
 
-def load_models(arch):
+def load_models(arch, transfer=False):
     """
     This function returns an architecture based on user input.
     params:
@@ -106,3 +109,5 @@ def load_models(arch):
         return models.resnet152(), 512
     elif arch == "wide_resnet50_2":
         return models.wide_resnet50_2(), 2048
+    elif arch == "resnet50_scratch":
+        return ResNet50(num_classes=4, transfer=transfer), 512
