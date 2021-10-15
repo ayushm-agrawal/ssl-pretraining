@@ -94,11 +94,11 @@ def training(configs, transfer=False):
 
             if(configs.arch == 'resnet50_scratch'):
                 torch.save(configs.model.state_dict(),
-                           configs.save_path+configs.exp_name)
+                           configs.save_path+configs.experiment_name)
             else:
 
                 torch.save(configs.model.module.state_dict(),
-                           configs.save_path+configs.exp_name)
+                           configs.save_path+configs.experiment_name)
 
             # compute test loss and accuracy
             if(configs.initialization == 1):
@@ -122,4 +122,4 @@ def training(configs, transfer=False):
                 print(
                     f"Epoch: {epoch} \tTrain Loss: {train_loss} \tTrain Acc: {train_acc}% ")
 
-        return np.asarray(train_acc_arr), np.asarray(train_loss_arr)
+    return np.asarray(train_acc_arr), np.asarray(train_loss_arr)
