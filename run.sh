@@ -4,6 +4,7 @@
 #SBATCH --mem=0
 #SBATCH --nodes=1
 #SBATCH --gres=gpu:2
+#SBATCH --constraint=gpu_32gb
 #SBATCH --job-name=baseline
 #SBATCH --mail-type=begin
 #SBATCH --mail-type=end

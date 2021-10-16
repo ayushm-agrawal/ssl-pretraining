@@ -29,8 +29,7 @@ def training(configs, transfer=False):
             for data, labels in tepoch:
                 tepoch.set_description(f"Epoch {epoch}")
                 # move the data and labels to gpu
-                if configs.gpu_avail:
-                    data, labels = data.cuda(), labels.cuda()
+                data, labels = data.cuda(), labels.cuda()
 
                 configs.optimizer.zero_grad()
                 # get model outputs
@@ -117,9 +116,5 @@ def training(configs, transfer=False):
                     f"Epoch: {epoch} \tTrain Loss: {train_loss} \tTrain Acc: {train_acc}% \tTest Loss: {test_loss} \tTest Acc: {test_acc}%")
                 if float(test_acc) >= configs.target_val_acc:
                     break
-
-            else:
-                print(
-                    f"Epoch: {epoch} \tTrain Loss: {train_loss} \tTrain Acc: {train_acc}% ")
 
     return np.asarray(train_acc_arr), np.asarray(train_loss_arr)

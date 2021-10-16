@@ -43,6 +43,7 @@ def initialization(configs):
     print("Initializing the weights for transfer/retraining now!")
 
     ##################### Transfer/Retraining #####################
+    torch.cuda.empty_cache()
 
     # saved dataloaders into configs.
     configs.data_loader = t_data_loader
