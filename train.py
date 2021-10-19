@@ -93,11 +93,11 @@ def training(configs, transfer=False):
 
             if(configs.arch == 'resnet50_scratch'):
                 torch.save(configs.model.state_dict(),
-                           configs.save_path+configs.experiment_name)
+                           configs.save_path)
             else:
 
                 torch.save(configs.model.module.state_dict(),
-                           configs.save_path+configs.experiment_name)
+                           configs.save_path)
 
             # compute test loss and accuracy
             if(configs.initialization == 1):
