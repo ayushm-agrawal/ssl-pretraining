@@ -67,6 +67,9 @@ def load_model(configs, classes):
         # update fc layer with pretraining classes
         model.fc = nn.Linear(model.fc.in_features, configs.num_classes)
 
+        model = nn.DataParallel(model)
+        model.cuda()
+
         # # load weights from pretraining
         model.load_state_dict(torch.load(
             configs.model_weights_dir + configs.model_in_name))
