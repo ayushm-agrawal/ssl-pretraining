@@ -74,7 +74,8 @@ def load_model(configs, classes):
         model.load_state_dict(torch.load(
             configs.model_weights_dir + configs.model_in_name))
 
-        print(f"Update FC Layer.. in_features: {in_features}, out: {classes}")
+        print(
+            f"Update FC Layer.. in_features: {model.fc.in_features}, out: {classes}")
         # # update the fc layer for transfer
         model.fc = nn.Linear(model.fc.in_features, classes)
 
