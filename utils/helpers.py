@@ -71,7 +71,7 @@ def load_model(configs, classes):
         model.cuda()
 
         # # load weights from pretraining
-        model.module.load_state_dict(torch.load(
+        model.load_state_dict(torch.load(
             configs.model_weights_dir + configs.model_in_name))
 
         print(
