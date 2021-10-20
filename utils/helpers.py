@@ -71,13 +71,13 @@ def load_model(configs, classes):
         model.cuda()
 
         # # load weights from pretraining
-        model.load_state_dict(torch.load(
+        model.module.load_state_dict(torch.load(
             configs.model_weights_dir + configs.model_in_name))
 
         print(
-            f"Update FC Layer.. in_features: {model.fc.in_features}, out: {classes}")
+            f"Update FC Layer.. in_features: {model.module.fc.in_features}, out: {classes}")
         # # update the fc layer for transfer
-        model.fc = nn.Linear(model.fc.in_features, classes)
+        model.fc = nn.Linear(model.module.fc.in_features, classes)
 
         freeze_count = 7
         count = 0
