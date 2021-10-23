@@ -34,7 +34,7 @@ def initialization(configs):
     configs.num_epochs = configs.p_num_epochs
 
     # run pretraining.
-    pretraining(configs, classes=configs.num_classes)
+    pretraining(configs, classes=configs.p_num_classes)
 
     # update num_classes for pretraining
     configs.num_classes = configs.p_num_classes
