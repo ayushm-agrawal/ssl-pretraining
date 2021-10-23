@@ -48,8 +48,9 @@ def initialization(configs):
     # saved dataloaders into configs.
     configs.data_loader = t_data_loader
 
+    print(f"Length t classes: {t_classes}")
     # run transfer learning or retraining.
-    trained_model = transfer_and_retrain(configs, classes=len(t_classes))
+    trained_model = transfer_and_retrain(configs, classes=10)
 
     print("Transfer learning complete.")
     print("Model is ready for evaluation.")
@@ -132,13 +133,13 @@ def transfer_and_retrain(configs, classes=0):
         f"\nTransfer model for {configs.num_classes} classes loaded successfully!")
 
     # move the model to GPU and DataParallel if possible.
-    # if configs.gpu_avail:
-    #     if torch.cuda.device_count() > 1:
-    #         transfer_model = nn.DataParallel(transfer_model)
-    #         print("\nTransfer model moved to Data Parallel")
-    #     transfer_model.cuda()
-    # else:
-    #     raise ValueError("Train on GPU is recommended!")
+    if configs.gpu_avail:
+        if torch.cuda.device_count() > 1:
+            transfer_model = nn.DataParallel(transfer_model)
+            print("\nTransfer model moved to Data Parallel")
+            transfer_model.cuda()
+        else:
+            raise ValueError("Train on GPU is recommended!")
 
     # create the optimizer.
     if configs.adam:

@@ -34,7 +34,9 @@ def training(configs, transfer=False):
                 configs.optimizer.zero_grad()
                 # get model outputs
                 output = configs.model(data)
-                # print(output.shape, labels.shape)
+                # print(f"Tensor Bitch: {output}, \n {labels}")
+               #  print(f"Shape Bitch: \n{output.shape}, {labels.shape}")
+                
                 # calculate the loss
                 loss = configs.criterion(output, labels)
                 # backprop
@@ -92,7 +94,7 @@ def training(configs, transfer=False):
                     print(f"Saving model at Epoch: {epoch}")
 
             if(configs.arch == 'resnet50_scratch'):
-                torch.save(configs.model.state_dict(),
+                torch.save(configs.model.module.state_dict(),
                            configs.save_path)
             else:
 
