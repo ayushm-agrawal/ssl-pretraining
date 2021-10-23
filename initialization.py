@@ -48,7 +48,7 @@ def initialization(configs):
     # saved dataloaders into configs.
     configs.data_loader = t_data_loader
 
-    print(f"Length t classes: {len(t_classes})")
+    print(f"Length t classes: {len(t_classes)}")
     # run transfer learning or retraining.
     transfer_and_retrain(configs, classes=len(t_classes))
 
