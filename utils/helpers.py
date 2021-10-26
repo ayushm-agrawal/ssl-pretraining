@@ -65,15 +65,31 @@ def load_model(configs, classes):
         model, _ = load_models(configs.arch, transfer=True)
 
         # update fc layer with pretraining classes
-        # model.fc = nn.Linear(model.fc.in_features, configs.num_classes)
+        model.fc = nn.Linear(model.fc.in_features, configs.num_classes)
+
+        # model = nn.DataParallel(model)
+        # model.cuda()
 
         # # load weights from pretraining
-        # model.load_state_dict(torch.load(
-        #     configs.model_weights_dir + configs.model_in_name))
+        model.load_state_dict(torch.load(
+            configs.model_weights_dir + configs.model_in_name))
 
+        print(
+            f"Update FC Layer.. in_features: {model.fc.in_features}, out: {classes}")
         # # update the fc layer for transfer
-        # model.fc = nn.Linear(model.fc.in_features, classes)
+        model.fc = nn.Linear(model.fc.in_features, classes)
 
+        freeze_count = 7
+        count = 0
+
+        print("Freezing {} layers.".format(freeze_count))
+
+        for child in model.children():
+            count += 1
+            if count < freeze_count:
+                for param in child.parameters():
+                    param.requires_grad = False
+        
         return model, configs.model_out_name
     else:
         print("Loading arch for training: {}, Type: {}.".format(

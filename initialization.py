@@ -34,21 +34,23 @@ def initialization(configs):
     configs.num_epochs = configs.p_num_epochs
 
     # run pretraining.
-    pretraining(configs, classes=4)
+    pretraining(configs, classes=configs.p_num_classes)
 
     # update num_classes for pretraining
-    configs.num_classes = 4
+    configs.num_classes = configs.p_num_classes
 
     print("Pre-Training complete.")
     print("Initializing the weights for transfer/retraining now!")
 
     ##################### Transfer/Retraining #####################
+    torch.cuda.empty_cache()
 
     # saved dataloaders into configs.
     configs.data_loader = t_data_loader
 
+    print(f"Length t classes: {len(t_classes)}")
     # run transfer learning or retraining.
-    trained_model = transfer_and_retrain(configs, classes=len(t_classes))
+    transfer_and_retrain(configs, classes=len(t_classes))
 
     print("Transfer learning complete.")
     print("Model is ready for evaluation.")
@@ -67,13 +69,11 @@ def pretraining(configs, classes=0):
         classes))
 
     # move the model to GPU and DataParallel if possible.
-    if configs.gpu_avail:
-        if torch.cuda.device_count() > 1:
-            pretraining_model = nn.DataParallel(pretraining_model)
-            print("\nPretraining model moved to Data Parallel")
-        pretraining_model.cuda()
-    # else:
-        # raise ValueError("Train on GPU is recommended!")
+
+    if torch.cuda.device_count() > 1:
+        pretraining_model = nn.DataParallel(pretraining_model)
+        print("\nPretraining model moved to Data Parallel")
+    pretraining_model.cuda()
 
     # create the optimizer.
     if(configs.adam == 1):
@@ -135,9 +135,9 @@ def transfer_and_retrain(configs, classes=0):
         if torch.cuda.device_count() > 1:
             transfer_model = nn.DataParallel(transfer_model)
             print("\nTransfer model moved to Data Parallel")
-        transfer_model.cuda()
-    else:
-        raise ValueError("Train on GPU is recommended!")
+            transfer_model.cuda()
+        else:
+            raise ValueError("Train on GPU is recommended!")
 
     # create the optimizer.
     if configs.adam:
@@ -162,7 +162,7 @@ def transfer_and_retrain(configs, classes=0):
     print(f"Transfer model will be saved at {save_path}")
 
     # train the transfer/retrain model.
-    model = training(configs, transfer=True)
+    model = training(configs)
 
     return model
 

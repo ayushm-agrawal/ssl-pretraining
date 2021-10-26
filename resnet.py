@@ -163,12 +163,12 @@ class ResNet(nn.Module):
 
 
 def ResNet50(num_classes, channels=3, transfer=False):
-    return ResNet(Bottleneck, [3, 4, 6, 3], num_classes, channels, transfer=False)
+    return ResNet(Bottleneck, [3, 4, 6, 3], num_classes, channels, transfer=transfer)
 
 
 def ResNet101(num_classes, channels=3, transfer=False):
-    return ResNet(Bottleneck, [3, 4, 23, 3], num_classes, channels, transfer=False)
+    return ResNet(Bottleneck, [3, 4, 23, 3], num_classes, channels, transfer=transfer)
 
 
 def ResNet152(num_classes, channels=3, transfer=False):
-    return ResNet(Bottleneck, [3, 8, 36, 3], num_classes, channels, transfer=False)
+    return ResNet(Bottleneck, [3, 8, 36, 3], num_classes, channels, transfer=transfer)
