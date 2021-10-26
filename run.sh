@@ -10,7 +10,7 @@
 #SBATCH --mail-type=end
 #SBATCH --mail-type=fail
 #SBATCH --mail-user=ayush.agrawal7661@gmail.com
-#SBATCH --output=/work/netthinker/shared/out_files/ssl-resnet-test-cifar10.out
+#SBATCH --output=/work/netthinker/shared/ayush/ssl-pretraining/out_log/ssl-resnet-test-cifar10.out
 
 export PYTHONPATH=$WORK/tf-gpu-pkgs
 module load singularity

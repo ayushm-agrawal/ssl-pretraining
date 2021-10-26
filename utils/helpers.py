@@ -82,14 +82,14 @@ def load_model(configs, classes):
         freeze_count = 7
         count = 0
 
-#        print("Freezing {} layers.".format(freeze_count))
-#
-#        for child in model.children():
-#            if count < freeze_count:
-#                for param in child.parameters():
-#                    param.requires_grad = False
-#            count += 1
-#
+        print("Freezing {} layers.".format(freeze_count))
+
+        for child in model.children():
+            count += 1
+            if count < freeze_count:
+                for param in child.parameters():
+                    param.requires_grad = False
+        
         return model, configs.model_out_name
     else:
         print("Loading arch for training: {}, Type: {}.".format(
