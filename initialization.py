@@ -162,7 +162,7 @@ def transfer_and_retrain(configs, classes=0):
     print(f"Transfer model will be saved at {save_path}")
 
     # train the transfer/retrain model.
-    model = training(configs, transfer=True)
+    model = training(configs)
 
     return model
 

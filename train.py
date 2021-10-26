@@ -8,6 +8,7 @@ from tqdm import tqdm
 def evaluate_model(configs, test_loss, test_correct, test_total, epoch):
     configs.model.eval()
     test_loader = configs.data_loader['valid']
+    print("\n------- VALIDATION -------\n")
     with tqdm(test_loader, unit="batch") as tepoch:
         with torch.no_grad():
             for data, labels in tepoch:
@@ -27,9 +28,13 @@ def evaluate_model(configs, test_loss, test_correct, test_total, epoch):
 
                 # accumulate total number of examples
                 test_total += data.size(0)
+
+                tepoch.set_postfix(test_loss=test_loss, test_accuracy=100. * (test_correct/test_total))
     test_loss = round(
-        test_loss/len(configs.data_loader['test'].dataset), 4)
+        test_loss/len(configs.data_loader['valid'].dataset), 4)
     test_acc = round(((test_correct/test_total) * 100), 4)
+
+#    print(f"Eval Epoch: {epoch} \t Test Loss: {test_loss} \t Test Acc: {test_acc}")
 
     return [test_loss, test_acc]
 
@@ -83,7 +88,7 @@ def training(configs):
 
                 accuracy = train_correct/train_total
 
-                tepoch.set_postfix(loss=loss.item(), accuracy=100. * accuracy)
+                tepoch.set_postfix(train_loss=loss.item(), train_accuracy=100. * accuracy)
                 sleep(0.1)
 
             # compute train loss and accuracy
@@ -106,7 +111,7 @@ def training(configs):
         train_acc_arr.append(train_acc)
         train_loss_arr.append(train_loss)
 
-        if(configs.initialization == 1 and float(test_acc) >= configs.target_val_acc):
+        if(configs.initialization == 1 and float(test_acc) >= configs.target_val_accuracy):
             # print(
             #     f"Epoch: {epoch} \tTrain Loss: {train_loss} \tTrain Acc: {train_acc}% \tTest Loss: {test_loss} \tTest Acc: {test_acc}%")
             break
