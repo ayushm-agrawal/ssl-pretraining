@@ -87,9 +87,6 @@ def load_model(configs, classes):
             if count < freeze_count:
                 for param in child.parameters():
                     param.requires_grad = False
-                    print(f"Freezing Param: {param}")
-                    configs.old_params.append(param)
-                    # param.requires_grad = False
         
         return model, configs.model_out_name
     else:
