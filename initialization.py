@@ -68,6 +68,8 @@ def pretraining(configs, classes=0):
     print("Pretraining model for {} pretrain classes loaded successfully!".format(
         classes))
 
+    configs.experiment.set_model_graph(str(pretraining_model))
+
     # move the model to GPU and DataParallel if possible.
 
     if torch.cuda.device_count() > 1:
@@ -124,6 +126,7 @@ def transfer_and_retrain(configs, classes=0):
     configs.target_val_accuracy = 95.0
     # load transfer model.
     transfer_model, transfer_model_name = load_model(configs, classes)
+    configs.experiment.set_model_graph(str(transfer_model))
     # update num_classes to transfer classes
     configs.num_classes = classes
 
@@ -142,7 +145,7 @@ def transfer_and_retrain(configs, classes=0):
     # create the optimizer.
     if configs.adam:
         optimizer = torch.optim.Adam(
-                filter(lambda p: p.requires_grad, transfer_model.parameters()),
+            filter(lambda p: p.requires_grad, transfer_model.parameters()),
             lr=configs.t_lr,
             weight_decay=configs.t_weight_decay)
     else:
@@ -160,7 +163,7 @@ def transfer_and_retrain(configs, classes=0):
     # train the model and save the weights.
     save_path = configs.model_weights_dir + "finetune/" + transfer_model_name
     print(f"Transfer model will be saved at {save_path}")
-    
+
     configs.save_path = save_path
     # train the transfer/retrain model.
     model = training(configs)
@@ -173,14 +176,17 @@ if __name__ == "__main__":
     configs = Config(params_dict)
 
     # start comet ML experiment
-    # experiment = Experiment(api_key="y8YtCd3TVO7TurC3t1D0LP7Ju",
-    #                         project_name="serengeti-camera-trap-classification", workspace="atharva7")
+    experiment = Experiment(
+        api_key="ZgD8zJEiZErhwIzPMfZpitMjq",
+        project_name="general",
+        workspace="ayushm-agrawal",
+    )
 
-    # experiment.set_name(configs.experiment_name)
+    experiment.set_name(configs.experiment_name)
     # experiment.add_tag("initialization")
 
-    # # log hyperparameters in comet ML
-    # experiment.log_parameters(configs)
+    # log hyperparameters in comet ML
+    experiment.log_parameters(configs)
 
     # check if dataset is provided.
     if configs.dataset is None:
@@ -200,18 +206,15 @@ if __name__ == "__main__":
     torch.backends.cudnn.benchmark = False
 
     # # pass the experiment object to configs
-    # configs.experiment = experiment
+    configs.experiment = experiment
 
     # run model training.
     initialization(configs)
-    
-    
 
-    # test the model if necessary
-    if configs.test_model:
-        # load model
-        configs.num_classes = 10
-        configs.initialization = 1
+    pretrain_model_log = configs.model_weights_dir + \
+        "pretrain/" + configs.model_in_name
+    transfer_model_log = configs.model_weights_dir + \
+        "finetune/" + configs.model_in_name
 
-        model, _ = load_model(configs, configs.num_classes)
-        initialization_testing(model)
+    experiment.log_model("Pretrain Model", pretrain_model_log)
+    experiment.log_model("Transfer Model", transfer_model_log)
