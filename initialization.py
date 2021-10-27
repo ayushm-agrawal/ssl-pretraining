@@ -1,9 +1,9 @@
 
 import random
 
+from comet_ml import Experiment
 import numpy as np
 import torch
-from comet_ml import Experiment
 from torch import nn, optim
 
 from loaders import initialization_loaders
