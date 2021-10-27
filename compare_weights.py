@@ -10,12 +10,12 @@ if __name__ == '__main__':
     model = ResNet50(num_classes=4, transfer=False)
     model.fc = nn.Linear(model.fc.in_features, 4)
     model.load_state_dict(torch.load(
-        './ag-5-freeze-r50-c10.pt', map_location=torch.device('cpu')))
+        './model_weights/ag-5-freeze-r50-c10.pt', map_location=torch.device('cpu')))
 
     model1 = ResNet50(num_classes=10, transfer=False)
     model1.fc = nn.Linear(model1.fc.in_features, 10)
     model1.load_state_dict(torch.load(
-        './fine-ag-5-freeze-r50-c10.pt', map_location=torch.device('cpu')))
+        './model_weights/fine-ag-5-freeze-r50-c10.pt', map_location=torch.device('cpu')))
 
     freeze_count = 5
     count = 0
