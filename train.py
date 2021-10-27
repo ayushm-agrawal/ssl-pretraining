@@ -47,7 +47,7 @@ def training(configs):
     # setup tracking arrays
     train_acc_arr, test_acc_arr = [], []
     train_loss_arr, test_loss_arr = [], []
-    best_test_loss = np.inf
+    best_test_acc = 0.0
 
     for epoch in range(1, configs.num_epochs+1):
 
@@ -105,13 +105,12 @@ def training(configs):
             test_acc_arr.append(test_acc)
             test_loss_arr.append(test_loss)
 
-        if(configs.initialization == 1 and test_loss <= best_test_loss):
-            print(f"Saving Transfer Model at Epoch: {epoch}")
-            best_test_loss = test_loss
-            torch.save(configs.model.module.state_dict(), configs.save_path)
-        else:
-            torch.save(configs.model.module.state_dict(),
-                   configs.save_path)
+#        if(configs.initialization == 1 and test_acc > best_test_acc):
+#            print(f"Saving Transfer Model at Epoch: {epoch}")
+#            best_test_acc = test_acc
+#            torch.save(configs.model.module.state_dict(), configs.save_path)
+#        else:
+        torch.save(configs.model.module.state_dict(),configs.save_path)
 
         # update tracking arrays
         train_acc_arr.append(train_acc)

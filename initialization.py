@@ -100,7 +100,7 @@ def pretraining(configs, classes=0):
         print("Schedule Dict for Pretrain")
         print(configs.schedule_dict)
     # Pretrain the model and save the weights.
-    save_path = configs.model_weights_dir + pretraining_model_name
+    save_path = configs.model_weights_dir + "pretrain/" + pretraining_model_name
     print("Pretraining model will be saved at {}".format(save_path))
 
     configs.save_path = save_path
@@ -142,7 +142,7 @@ def transfer_and_retrain(configs, classes=0):
     # create the optimizer.
     if configs.adam:
         optimizer = torch.optim.Adam(
-            transfer_model.parameters(),
+                filter(lambda p: p.requires_grad, transfer_model.parameters()),
             lr=configs.t_lr,
             weight_decay=configs.t_weight_decay)
     else:
@@ -158,9 +158,10 @@ def transfer_and_retrain(configs, classes=0):
     configs.optimizer = optimizer
 
     # train the model and save the weights.
-    save_path = configs.model_weights_dir + transfer_model_name
+    save_path = configs.model_weights_dir + "finetune/" + transfer_model_name
     print(f"Transfer model will be saved at {save_path}")
-
+    
+    configs.save_path = save_path
     # train the transfer/retrain model.
     model = training(configs)
 
@@ -203,6 +204,8 @@ if __name__ == "__main__":
 
     # run model training.
     initialization(configs)
+    
+    
 
     # test the model if necessary
     if configs.test_model:
