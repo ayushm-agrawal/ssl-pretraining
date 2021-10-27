@@ -11,8 +11,8 @@ def config_dict(location):
        a dictionary with all the hyperparameters key, value
        pairs. """
 
-    __location__ = os.path.realpath(os.path.join(
-        os.getcwd(), os.path.dirname(__file__)))
+    # __location__ = os.path.realpath(os.path.join(
+    #     os.getcwd(), os.path.dirname(__file__)))
 
     # file = open(os.path.join(__location__, location))
     file = open(location)
@@ -26,7 +26,6 @@ def config_dict(location):
         parameter = parameter.replace("\n", "")
         # get the key and value
         key, value = parameter.split("=")
-
         # convert value to the right type
         value = cast_type(value)
 
@@ -67,15 +66,12 @@ def load_model(configs, classes):
         # update fc layer with pretraining classes
         model.fc = nn.Linear(model.fc.in_features, configs.num_classes)
 
-        # model = nn.DataParallel(model)
-        # model.cuda()
-
         # # load weights from pretraining
         model.load_state_dict(torch.load(
             configs.model_weights_dir + "pretrain/" + configs.model_in_name))
 
         print(
-            f"Update FC Layer.. in_features: {model.fc.in_features}, out: {classes}")
+            f"Update FC Layer. in: {model.fc.in_features}, out: {classes}")
         # # update the fc layer for transfer
         model.fc = nn.Linear(model.fc.in_features, classes)
 
