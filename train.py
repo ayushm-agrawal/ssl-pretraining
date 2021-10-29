@@ -1,5 +1,7 @@
 from time import sleep
 
+from comet_ml import ConfusionMatrix
+from sklearn.metrics import confusion_matrix
 import numpy as np
 import torch
 from tqdm import tqdm
@@ -9,6 +11,9 @@ def evaluate_model(configs, test_loss, test_correct, test_total, epoch):
     configs.model.eval()
     test_loader = configs.data_loader['valid']
     print("\n------- VALIDATION -------\n")
+    
+    y_pred_test, y_true_test = [], []
+
     with configs.experiment.test():
         with tqdm(test_loader, unit="batch") as tepoch:
             with torch.no_grad():
@@ -28,7 +33,12 @@ def evaluate_model(configs, test_loss, test_correct, test_total, epoch):
                         preds.eq(labels.data.view_as(preds))).cpu().numpy())
 
                     # accumulate total number of examples
-                    test_total += data.size(0)
+                    test_total += data.size(0) 
+
+                    y_true = labels.cpu().data.view_as(preds).numpy()
+
+                    y_true_test.extend(y_true)
+                    y_pred_test.extend(preds.cpu().numpy())
 
                     tepoch.set_postfix(
                         test_loss=test_loss, test_accuracy=100. * (test_correct/test_total))
@@ -38,6 +48,13 @@ def evaluate_model(configs, test_loss, test_correct, test_total, epoch):
 
         configs.experiment.log_metric("accuracy", test_acc)
         configs.experiment.log_metric("loss", test_loss)
+        
+        print(f"Printing Test Preds True: {np.asarray(y_pred_test).shape}, {np.asarray(y_true_test).shape}")
+        cm = confusion_matrix(np.asarray(y_true_test), np.asarray(y_pred_test))
+        print(type(cm))
+        print(cm)
+        configs.experiment.log_confusion_matrix(matrix=cm, labels=configs.t_classes, epoch=epoch, title=f"Confusion Matrix Test Epoch {epoch}", 
+                file_name=f"test-confusion-matrix-epoch-{epoch}.json")
 
     return [test_loss, test_acc]
 
@@ -55,16 +72,17 @@ def training(configs):
     batch_label_loss = 't_batch_loss' if configs.initialization == 1 else 'p_batch_loss'
     epoch_label_acc = 't_accuracy' if configs.initialization == 1 else 'p_accuracy'
     epoch_label_loss = 't_loss' if configs.initialization == 1 else 'p_loss'
+    cm = ConfusionMatrix()
 
     with configs.experiment.train():
 
-        print("Logging weights as histogram (before training)...")
+        # print("Logging weights as histogram (before training)...")
         # Log model weights
-        weights = []
-        for name in configs.model.named_parameters():
-            if 'weight' in name[0]:
-                weights.extend(name[1].detach().numpy().tolist())
-        configs.experiment.log_histogram_3d(weights, step=0)
+        # weights = []
+        # for name in configs.model.named_parameters():
+            # if 'weight' in name[0]:
+                # weights.extend(name[1].cpu().detach().numpy().tolist())
+        # configs.experiment.log_histogram_3d(weights, step=0)
 
         step = 0
         for epoch in range(1, configs.num_epochs+1):
@@ -72,6 +90,8 @@ def training(configs):
             # tracking variables
             train_loss, train_correct, train_total = 0.0, 0.0, 0.0
             test_loss, test_correct, test_total = 0.0, 0.0, 0.0
+
+            y_pred_train, y_true_train = [], []
 
             # train the model
             configs.model.train()
@@ -99,6 +119,14 @@ def training(configs):
                     # get the number of correct predictions in the batch
                     curr_correct = np.sum(np.squeeze(
                         preds.eq(labels.data.view_as(preds))).cpu().numpy())
+                    
+                    # cm.compute_matrix(labels.cpu().detach().data.view_as(preds), preds.cpu())
+                    y_true = labels.cpu().data.view_as(preds).numpy()
+                    # print(f"HERE: {y_true.shape}, {preds.cpu().numpy().shape}")
+                    # conf_mat = multilabel_confusion_matrix(y_true, preds.cpu().numpy())
+                    # configs.experiment.log_confusion_matrix(y_true=y_true, y_predicted=preds.cpu(), step=step, epoch=epoch)
+                    y_true_train.extend(y_true)
+                    y_pred_train.extend(preds.cpu().numpy())
 
                     train_correct += curr_correct
                     # accumulate total number of examples
@@ -125,20 +153,23 @@ def training(configs):
                     train_loss/len(configs.data_loader['train'].dataset), 4)
                 train_acc = round(((train_correct/train_total) * 100.0), 4)
 
+                configs.experiment.log_confusion_matrix(y_true=y_true_train, y_predicted=y_pred_train,
+                           epoch=epoch, title=f"Confusion Matrix Epoch {epoch}", file_name=f"confusion-matrix-epoch-{epoch}.json")
+
                 # Log train_loss and train_accuracy to Comet.ml; step is each epoch
                 configs.experiment.log_metric(
-                    epoch_label_loss, train_loss, step=epoch)
+                    epoch_label_loss, train_loss, epoch=epoch)
 
                 configs.experiment.log_metric(
-                    epoch_label_acc, train_acc, step=epoch)
+                    epoch_label_acc, train_acc, epoch=epoch)
 
-            print("Logging weights as histogram...")
+            # print("Logging weights as histogram...")
             # Log model weights
-            weights = []
-            for name in configs.model.named_parameters():
-                if 'weight' in name[0]:
-                    weights.extend(name[1].detach().numpy().tolist())
-            configs.experiment.log_histogram_3d(weights, step=epoch + 1)
+            # weights = []
+            # for name in configs.model.named_parameters():
+                # if 'weight' in name[0]:
+                   #  weights.extend(name[1].cpu().detach().numpy().tolist())
+            # configs.experiment.log_histogram_3d(weights, step=epoch + 1)
 
             # evaluate model
             if(configs.initialization == 1):

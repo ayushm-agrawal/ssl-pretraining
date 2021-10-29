@@ -1,9 +1,9 @@
 
 import random
 
+from comet_ml import Experiment
 import numpy as np
 import torch
-from comet_ml import Experiment
 from torch import nn, optim
 
 from loaders import initialization_loaders
@@ -47,7 +47,7 @@ def initialization(configs):
 
     # saved dataloaders into configs.
     configs.data_loader = t_data_loader
-
+    configs.t_classes = t_classes
     print(f"Length t classes: {len(t_classes)}")
     # run transfer learning or retraining.
     transfer_and_retrain(configs, classes=len(t_classes))
@@ -142,10 +142,15 @@ def transfer_and_retrain(configs, classes=0):
         else:
             raise ValueError("Train on GPU is recommended!")
 
+    for child in transfer_model.children():
+        for param in child.parameters():
+            if (param.requires_grad == True):
+                print(child)
+
     # create the optimizer.
     if configs.adam:
         optimizer = torch.optim.Adam(
-            filter(lambda p: p.requires_grad, transfer_model.parameters()),
+            transfer_model.parameters(),
             lr=configs.t_lr,
             weight_decay=configs.t_weight_decay)
     else:
@@ -178,7 +183,7 @@ if __name__ == "__main__":
     # start comet ML experiment
     experiment = Experiment(
         api_key="ZgD8zJEiZErhwIzPMfZpitMjq",
-        project_name="general",
+        project_name="ssl-pretraining",
         workspace="ayushm-agrawal",
     )
 
