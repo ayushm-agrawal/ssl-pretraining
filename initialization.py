@@ -19,9 +19,9 @@ def initialization(configs):
         - configs (Config) : config object used for training.
     """
 
-    p_data_loader, t_data_loader, p_classes, t_classes = initialization_loaders(configs,
-                                                                                configs.dataset,
-                                                                                num_workers=configs.num_workers)
+    p_data_loader, t_data_loader, _, t_classes = initialization_loaders(configs,
+                                            configs.dataset,
+                                            num_workers=configs.num_workers)
     ######################### Pretraining #########################
 
     # saved pretraining-dataloader into configs.
@@ -65,8 +65,7 @@ def pretraining(configs, classes=0):
     """
     # load pretraining model.
     pretraining_model, pretraining_model_name = load_model(configs, classes)
-    print("Pretraining model for {} pretrain classes loaded successfully!".format(
-        classes))
+    print(f"Model for {classes} pretrain classes loaded successfully!")
 
     configs.experiment.set_model_graph(str(pretraining_model))
 
@@ -113,7 +112,7 @@ def pretraining(configs, classes=0):
 
 def transfer_and_retrain(configs, classes=0):
     """
-    This function performs trasnfer learning/ retraining for a pretrained model.
+    This function performs trasnfer learning/ retraining for pretrained model.
     params:
         - configs (Config) : config object used for training.
         - classes (int) : number of classes used for transfer/retrain.
@@ -131,7 +130,7 @@ def transfer_and_retrain(configs, classes=0):
     configs.num_classes = classes
 
     print(
-        f"\nTransfer model for {configs.num_classes} classes loaded successfully!")
+        f"\nTransfer model for {configs.num_classes} classes loaded")
 
     # move the model to GPU and DataParallel if possible.
     if configs.gpu_avail:
@@ -196,7 +195,7 @@ if __name__ == "__main__":
     # check if dataset is provided.
     if configs.dataset is None:
         raise ValueError(
-            "Dataset location not provided. Please add that through slurm file")
+            "Dataset location not provided")
 
     # check for GPU.
     configs.gpu_avail = torch.cuda.is_available()

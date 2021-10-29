@@ -1,16 +1,12 @@
 import os
 import os.path
-import random
 
 import numpy as np
 import torch
-# import torchnet as tnt
-from matplotlib import cm
 from PIL import Image
-from torch.utils.data.dataloader import default_collate
 from torchvision.datasets.vision import VisionDataset
 
-#### These were in the original Pytorch Docs and were not changed ####
+# These were in the original Pytorch Docs and were not changed ####
 
 
 def has_file_allowed_extension(filename, extensions):

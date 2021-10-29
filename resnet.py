@@ -7,7 +7,8 @@ import torch.nn.functional as F
 class Bottleneck(nn.Module):
     expansion = 4
 
-    def __init__(self, in_channels, out_channels, i_downsample=None, stride=1):
+    def __init__(self, in_channels, out_channels, i_downsample=None
+                 , stride=1):
         super(Bottleneck, self).__init__()
 
         self.conv1 = nn.Conv2d(in_channels, out_channels,
@@ -19,7 +20,8 @@ class Bottleneck(nn.Module):
         self.batch_norm2 = nn.BatchNorm2d(out_channels)
 
         self.conv3 = nn.Conv2d(
-            out_channels, out_channels*self.expansion, kernel_size=1, stride=1, padding=0)
+            out_channels, out_channels*self.expansion, kernel_size=1, 
+            stride=1, padding=0)
         self.batch_norm3 = nn.BatchNorm2d(out_channels*self.expansion)
 
         self.i_downsample = i_downsample
@@ -48,14 +50,18 @@ class Bottleneck(nn.Module):
 class Block(nn.Module):
     expansion = 1
 
-    def __init__(self, in_channels, out_channels, i_downsample=None, stride=1):
+    def __init__(self, in_channels, out_channels, i_downsample=None, 
+                 stride=1):
         super(Block, self).__init__()
 
         self.conv1 = nn.Conv2d(
-            in_channels, out_channels, kernel_size=3, padding=1, stride=stride, bias=False)
+            in_channels, out_channels, kernel_size=3, padding=1, 
+            stride=stride, 
+            bias=False)
         self.batch_norm1 = nn.BatchNorm2d(out_channels)
         self.conv2 = nn.Conv2d(out_channels, out_channels,
-                               kernel_size=3, padding=1, stride=stride, bias=False)
+                               kernel_size=3, padding=1, stride=stride, 
+                               bias=False)
         self.batch_norm2 = nn.BatchNorm2d(out_channels)
 
         self.i_downsample = i_downsample
@@ -78,14 +84,16 @@ class Block(nn.Module):
 
 
 class ResNet(nn.Module):
-    def __init__(self, ResBlock, layer_list, num_classes, num_channels=3, transfer=False):
+    def __init__(self, ResBlock, layer_list, num_classes, num_channels=3, 
+                 transfer=False):
         super(ResNet, self).__init__()
 
         self.transfer = transfer
         self.in_channels = 64
 
         self.conv1 = nn.Conv2d(
-            num_channels, 64, kernel_size=7, stride=2, padding=3, bias=False)
+            num_channels, 64, kernel_size=7, stride=2, padding=3, 
+            bias=False)
         self.batch_norm1 = nn.BatchNorm2d(64)
         self.relu = nn.ReLU()
         self.max_pool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
@@ -163,12 +171,15 @@ class ResNet(nn.Module):
 
 
 def ResNet50(num_classes, channels=3, transfer=False):
-    return ResNet(Bottleneck, [3, 4, 6, 3], num_classes, channels, transfer=transfer)
+    return ResNet(Bottleneck, [3, 4, 6, 3], num_classes, channels,
+                  transfer=transfer)
 
 
 def ResNet101(num_classes, channels=3, transfer=False):
-    return ResNet(Bottleneck, [3, 4, 23, 3], num_classes, channels, transfer=transfer)
+    return ResNet(Bottleneck, [3, 4, 23, 3], num_classes, channels, 
+                  transfer=transfer)
 
 
 def ResNet152(num_classes, channels=3, transfer=False):
-    return ResNet(Bottleneck, [3, 8, 36, 3], num_classes, channels, transfer=transfer)
+    return ResNet(Bottleneck, [3, 8, 36, 3], num_classes, channels, 
+                  transfer=transfer)
