@@ -61,7 +61,7 @@ def default_loader(path):
 
 
 def make_dataset(directory, classes, class_to_idx,
-                 extensions=None, is_valid_file=None, subset_split=36000, class_split=12, dist="normal"):
+                 extensions=None, is_valid_file=None, subset_split=50000, class_split=10, dist="normal"):
     """
     This function creates custom pretraining and transfer datsets.
     params:
@@ -144,7 +144,7 @@ def make_dataset(directory, classes, class_to_idx,
         # compute the contribution of each class to the total dataset.
         # and then scale it to the pretraining size.
         for k, v in dataset_counts.items():
-            dataset_percentage[k] = int(0.4*v)
+            dataset_percentage[k] = int(1.0*v)
             # int(np.floor((v/total_counts)*subset_split))
 
         # pick the pretraining classes
@@ -171,7 +171,7 @@ def make_dataset(directory, classes, class_to_idx,
                 # increment label count in order to keep track
                 pretrain_counts[label] += 1
             # otherwise it goes to transfer
-            else:
+            # else:
                 transfer_data.append((img, label))
                 t_classes.append(label)
 
@@ -278,7 +278,7 @@ class DatasetFolder(VisionDataset):
     """
 
     def __init__(self, root, loader, extensions=None, transform=None,
-                 target_transform=None, is_valid_file=None,  subset_split=36000, class_split=12, dist="normal"):
+                 target_transform=None, is_valid_file=None,  subset_split=50000, class_split=10, dist="normal"):
         super(DatasetFolder, self).__init__(root, transform=transform,
                                             target_transform=target_transform)
 
@@ -361,7 +361,7 @@ class TransferImageFolder(DatasetFolder):
     """
 
     def __init__(self, root, transform=None, target_transform=None,
-                 loader=default_loader, is_valid_file=None,  subset_split=30000, class_split=10, dist="normal"):
+                 loader=default_loader, is_valid_file=None,  subset_split=50000, class_split=10, dist="normal"):
         # calls DatasetFolder
         super(TransferImageFolder, self).__init__(root, loader, IMG_EXTENSIONS if is_valid_file is None else None,
                                                   transform=transform,
@@ -425,7 +425,7 @@ class PretrainImageFolder(DatasetFolder):
     """
 
     def __init__(self, root, transform=None, target_transform=None,
-                 loader=default_loader, is_valid_file=None,  subset_split=20000, class_split=10, dist="normal"):
+                 loader=default_loader, is_valid_file=None,  subset_split=50000, class_split=10, dist="normal"):
         # calls DatasetFolder
         super(PretrainImageFolder, self).__init__(root, loader, IMG_EXTENSIONS if is_valid_file is None else None,
                                                   transform=transform,

@@ -123,9 +123,9 @@ def initialization_loaders(configs, data_path, num_workers=0):
 
     # create imagefolder objects for augmented transfer and pretraining dataset.
     transfer_dataset = TransferImageFolder(
-        root=data_path, transform=t_train_transform, subset_split=30000, class_split=10)
+        root=data_path, transform=t_train_transform, subset_split=50000, class_split=10)
     pretrain_dataset = PretrainImageFolder(
-        root=data_path, transform=p_train_transform, subset_split=20000, class_split=10)
+        root=data_path, transform=p_train_transform, subset_split=50000, class_split=10)
 
     # # create imagefolder objects for non-augmented pretraining dataset.
     # pretrain_dataset_2 = PretrainImageFolder(

@@ -139,10 +139,16 @@ def training(configs):
                     train_loss/len(configs.data_loader['train'].dataset), 4)
                 train_acc = round(((train_correct/train_total) * 100.0), 4)
 
-                cm = confusion_matrix(np.asarray(y_true_train), np.asarray(y_pred_train))
+                # cm = confusion_matrix(np.asarray(y_true_train), np.asarray(y_pred_train))
         
-                configs.experiment.log_confusion_matrix(matrix = cm, labels=["0", "90", "180", "270"],
+                if(configs.initialization == 1):
+                    
+                    cm = confusion_matrix(np.asarray(y_true_train), np.asarray(y_pred_train))
+                    configs.experiment.log_confusion_matrix(matrix = cm, labels=configs.t_classes,
                            epoch=epoch, title=f"Confusion Matrix Epoch {epoch}", file_name=f"confusion-matrix-epoch-{epoch}.json")
+                else:
+                    configs.experiment.log_confusion_matrix(y_true=y_true_train, y_pred=y_pred_train, labels=["0","90","180","270"],
+                           epoch=epoch, title=f"Pretrain Confusion Matrix Epoch {epoch}", file_name=f"pre-conf-matrix-epoch-{epoch}.json")
 
                 # Log train_loss and train_accuracy to Comet.ml; step is each epoch
                 configs.experiment.log_metric(
