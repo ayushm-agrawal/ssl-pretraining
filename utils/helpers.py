@@ -55,39 +55,39 @@ def load_model(configs, classes):
     """ Function loads the model based on hyperparameters"""
 
     if configs.initialization == 1:
-        print("Loading arch for initialization: {}, Type: {}.".format(
-            configs.arch, type(configs.arch)))
-        print("Loading weights for arch from: {}".format(
-            configs.model_weights_dir))
+        # print("Loading arch for initialization: {}, Type: {}.".format(
+        #     configs.arch, type(configs.arch)))
+        # print("Loading weights for arch from: {}".format(
+        #     configs.model_weights_dir))
 
         # load model
-        model, _ = load_models(configs.arch, transfer=True)
+        model, _ = load_models(configs.arch, n_classes = 10, transfer=True)
 
         # update fc layer with pretraining classes
-        model.fc = nn.Linear(model.fc.in_features, configs.num_classes)
+        # model.fc = nn.Linear(model.fc.in_features, configs.num_classes)
 
         # # load weights from pretraining
-        model.load_state_dict(torch.load(
-            configs.model_weights_dir + "pretrain/" + configs.model_in_name))
+        # model.load_state_dict(torch.load(
+        #     configs.model_weights_dir + "pretrain/" + configs.model_in_name))
 
-        print(
-            f"Update FC Layer. in: {model.fc.in_features}, out: {classes}")
-        # # update the fc layer for transfer
-        model.fc = nn.Linear(model.fc.in_features, classes)
+        # print(
+        #     f"Update FC Layer. in: {model.fc.in_features}, out: {classes}")
+        # # # update the fc layer for transfer
+        # model.fc = nn.Linear(model.fc.in_features, classes)
 
-        freeze_count = configs.t_freeze_layers
-        count = 0
+        # freeze_count = configs.t_freeze_layers
+        # count = 0
 
-        print("Freezing {} layers.".format(freeze_count))
+        # print("Freezing {} layers.".format(freeze_count))
 
-        configs.old_params = []
+        # configs.old_params = []
 
-        for child in model.children():
-            count += 1
-            if count < freeze_count:
-                for param in child.parameters():
-                    param.requires_grad = False
-                    print(f"Freezing Param: {param}")
+        # for child in model.children():
+        #     count += 1
+        #     if count < freeze_count:
+        #         for param in child.parameters():
+        #             param.requires_grad = False
+        #             print(f"Freezing Param: {param}")
         
         return model, configs.model_out_name
     else:
@@ -101,7 +101,7 @@ def load_model(configs, classes):
         return model, configs.model_out_name
 
 
-def load_models(arch, transfer=False):
+def load_models(arch, n_classes=10, transfer=False):
     """
     This function returns an architecture based on user input.
     params:
@@ -125,4 +125,4 @@ def load_models(arch, transfer=False):
     elif arch == "wide_resnet50_2":
         return models.wide_resnet50_2(), 2048
     elif arch == "resnet50_scratch":
-        return ResNet50(num_classes=4, transfer=transfer), 512
+        return ResNet50(num_classes=n_classes, transfer=transfer), 512

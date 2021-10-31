@@ -1,9 +1,9 @@
 
 import random
 
-from comet_ml import Experiment
 import numpy as np
 import torch
+from comet_ml import Experiment
 from torch import nn, optim
 
 from loaders import initialization_loaders
@@ -212,8 +212,23 @@ if __name__ == "__main__":
     # # pass the experiment object to configs
     configs.experiment = experiment
 
-    # run model training.
-    initialization(configs)
+    if (configs.initialization == 1):
+        _, t_data_loader, _, t_classes = initialization_loaders(configs,
+                                            configs.dataset,
+                                            num_workers=configs.num_workers)
+        configs.data_loader = t_data_loader
+        configs.t_classes = t_classes
+        print(f"Length t classes: {len(t_classes)}")
+        # Load the loss criterion.
+        configs.criterion = nn.CrossEntropyLoss()
+        # run transfer learning or retraining.
+        _ = transfer_and_retrain(configs, classes=len(t_classes))
+        
+    else:
+        # run model training.
+        initialization(configs)
+    
+    
 
     pretrain_model_log = configs.model_weights_dir + \
         "pretrain/" + configs.model_in_name
