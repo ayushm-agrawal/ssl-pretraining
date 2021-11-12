@@ -125,4 +125,4 @@ def load_models(arch, n_classes=10, transfer=False):
     elif arch == "wide_resnet50_2":
         return models.wide_resnet50_2(), 2048
     elif arch == "resnet50_scratch":
-        return ResNet50(num_classes=n_classes, transfer=transfer), 512
+        return ResNet50(transfer=transfer), 512

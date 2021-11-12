@@ -182,5 +182,7 @@ def training(configs):
 
             if(configs.initialization == 1 and float(test_acc) >= configs.target_val_accuracy):
                 break
-
+            
+            configs.scheduler.step()
+            
     return np.asarray(train_acc_arr), np.asarray(train_loss_arr)

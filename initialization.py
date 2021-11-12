@@ -163,6 +163,9 @@ def transfer_and_retrain(configs, classes=0):
     # save model and optimizer on configs.
     configs.model = transfer_model
     configs.optimizer = optimizer
+    
+    configs.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(configs.optimizer, T_max=200)
+    
 
     # train the model and save the weights.
     save_path = configs.model_weights_dir + "finetune/" + transfer_model_name
