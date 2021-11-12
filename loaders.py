@@ -1,18 +1,10 @@
-import math
-
-import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torchvision.transforms as transforms
-from IPython.display import Image
 from matplotlib import cm
-from PIL import Image
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader
 from torchvision import datasets
-from torchvision.utils import make_grid, save_image
-
 from custom_dataset import PretrainImageFolder, TransferImageFolder
-
 
 def create_loaders(configs, data_path, num_workers=0):
     """
@@ -63,10 +55,10 @@ def create_loaders(configs, data_path, num_workers=0):
         len(valid_dataset.class_to_idx)))
 
     # prepare data loaders (combine dataset and sampler).
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=configs.batch_size,
+    train_loader = DataLoader(train_dataset, batch_size=configs.batch_size,
                                                num_workers=num_workers, shuffle=True)
 
-    valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=configs.batch_size,
+    valid_loader = DataLoader(valid_dataset, batch_size=configs.batch_size,
                                                num_workers=num_workers, shuffle=True)
     # Create loaders dictionary
     loaders_dict = {'train': train_loader,
@@ -131,9 +123,9 @@ def initialization_loaders(configs, data_path, num_workers=0):
 
     # create imagefolder objects for augmented transfer and pretraining dataset.
     transfer_dataset = TransferImageFolder(
-        root=data_path, transform=t_train_transform, subset_split=30000, class_split=10)
+        root=data_path, transform=t_train_transform, subset_split=50000, class_split=10)
     pretrain_dataset = PretrainImageFolder(
-        root=data_path, transform=p_train_transform, subset_split=20000, class_split=10)
+        root=data_path, transform=p_train_transform, subset_split=50000, class_split=10)
 
     # # create imagefolder objects for non-augmented pretraining dataset.
     # pretrain_dataset_2 = PretrainImageFolder(
@@ -157,14 +149,14 @@ def initialization_loaders(configs, data_path, num_workers=0):
     transfer_dataset, pretrain_dataset = None, None
 
     # dataloaders for transfer learning.
-    t_train_loader = torch.utils.data.DataLoader(t_train_dataset, batch_size=configs.t_batch_size,
+    t_train_loader = DataLoader(t_train_dataset, batch_size=configs.t_batch_size,
                                                  num_workers=num_workers, shuffle=True)
 
-    t_val_loader = torch.utils.data.DataLoader(t_val_dataset, batch_size=configs.t_batch_size,
+    t_val_loader =  DataLoader(t_val_dataset, batch_size=configs.t_batch_size,
                                                num_workers=num_workers, shuffle=True)
 
     # dataloaders for pretraining.
-    p_train_loader = torch.utils.data.DataLoader(p_train_dataset, batch_size=configs.p_batch_size,
+    p_train_loader = DataLoader(p_train_dataset, batch_size=configs.p_batch_size,
                                                  num_workers=num_workers, shuffle=True)
 
     # Create loaders dictionary for transfer learning and pretraining.

@@ -1,3 +1,4 @@
 __pycache__
 out_log/
-model_weights/
+model_weights/*
+*.pt

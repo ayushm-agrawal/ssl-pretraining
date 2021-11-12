@@ -5,12 +5,12 @@
 #SBATCH --nodes=1
 #SBATCH --gres=gpu:2
 #SBATCH --constraint=gpu_32gb
-#SBATCH --job-name=baseline
+#SBATCH --job-name=r50-scratch
 #SBATCH --mail-type=begin
 #SBATCH --mail-type=end
 #SBATCH --mail-type=fail
 #SBATCH --mail-user=ayush.agrawal7661@gmail.com
-#SBATCH --output=/work/netthinker/shared/ayush/ssl-pretraining/out_log/ssl-resnet-test-cifar10.out
+#SBATCH --output=./out_log/resnet50-scratch.out
 
 export PYTHONPATH=$WORK/tf-gpu-pkgs
 module load singularity
